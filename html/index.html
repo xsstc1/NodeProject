@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Node</title>
+    <script src="https://cdn.bootcss.com/jquery/2.1.3/jquery.min.js">
+        
+    </script>
+    <script src="https://cdn.bootcss.com/socket.io/2.0.3/socket.io.js"></script>
+    <style>
+    	.del{cursor: pointer;margin-left: 5px}
+    	#textarea{height: 35px;width: 40%;text-indent: 1em;border-radius: 3px;border: 1px solid #ccc}
+    	#submit{padding: 8px 30px;background-color: #1ebdc5;color: #fff;border: none;border-radius: 3px}
+    </style>
+</head>
+
+<body>
+<p>
+        <input id="textarea" type="text" placeholder="快来写段话"/>
+    </p>
+    <p>
+        <button id="submit">提交</button>
+    </p>
+    <div id="node">
+    </div>
+    
+    <script type="text/javascript">
+    $(function() {
+        var socket = io();
+    // function a(){
+    //   var info = $("#input").val();
+    //   if(info == "" ){
+    //     alert("请输入内容")
+    //   }else{
+    //     socket.emit('click1', {rp:info});
+    //     $("#input").val("")
+    //   }
+
+    // }
+
+    //监听click2事件
+    socket.on('click2', function(data){
+      console.log(data)
+        var htmldatas = data.datas;
+        var html = $('<p>'+ htmldatas +'</p>');
+        $("#node").append(html)
+        // document.getElementById('ultext').innerHTML = htmldatas;
+    })
+
+		reloadMessage()
+        // var int = window.setInterval(reloadMessage,2000)
+
+        $(document).on("click",".del",function(){
+        	// alert($(this).parents("p").attr("data-val"));
+        	var delData = {
+        		"userId" : $(this).parents("p").attr("data-val")
+        	}
+        	$.ajax({
+                    type: "POST",
+                    url: "http://node.airtoy.cn/node/users/del",
+                    data: delData,
+                    dataType: "json",
+                    success: function(result) {
+                        reloadMessage()
+                    }
+                });
+        });
+        $("#submit").on("click", function() {
+            keySubmit()
+        });
+        $("#textarea").on("keydown", function(event) {
+        	if(event.keyCode == 13){
+        		keySubmit()
+        	}
+        });
+
+        function keySubmit(){
+        	var postData = {
+                "username": $("#textarea").val(),
+                "password": null
+            }
+            if (postData.username == "") {
+                alert("填写一段话")
+            } else {
+            	// console.log(JSON.stringify(postData));
+                $.ajax({
+                    type: "POST",
+                    url: "http://node.airtoy.cn/node/users/login",
+                    data: postData,
+                    dataType: "json",
+                    success: function(result) {
+                    	
+                        socket.emit('click1', {rp:$("#textarea").val()});
+                        $("#textarea").val("")
+                    }
+                });
+            }
+        };
+        function reloadMessage(){
+        	$("#node").empty();
+            $("#textarea").focus()
+    		$.ajax({
+            type: "GET",
+            url: "http://node.airtoy.cn/node/users/test",
+            data: null,
+            dataType: "json",
+            success: function(result) {
+                console.log(result.data);
+                for (var i = 0; i < result.data.length; i++) {
+                    var html = $('<p data-val='+ result.data[i]._id+'><span contentEditable="true">' + result.data[i].username + '</span><small class="del">x</small></p>');
+                    $("#node").append(html);
+
+                }
+
+            }
+        });
+    	}
+    })
+    </script>
+</body>
+
+</html>
